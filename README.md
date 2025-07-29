@@ -17,20 +17,27 @@ This project demonstrates an Agent-to-Agent (A2A) communication system for retri
 - FastAPI
 - Uvicorn
 - LangChain or LangGraph
+- python-dotenv
+- pydantic
 - (A2A Python SDK, if available)
 
 ## Setup
 1. Clone the repository and navigate to the `project` directory.
-2. Install dependencies:
-   ```bash
-   pip install fastapi uvicorn langchain
-   # or for LangGraph: pip install langgraph
+2. Create a `.env` file in the project directory with the following content:
+   ```env
+   API_KEY=sk-G1_wkZ37sEmY4eqnGdcNig
+   API_URL=https://dekallm.cloudeka.ai/v1/chat/completions/
+   MODEL=qwen/qwen25-72b-instruct
    ```
-3. Start the Remote AI Agent:
+3. Install dependencies:
+   ```bash
+   pip install fastapi uvicorn langchain langgraph python-dotenv pydantic
+   ```
+4. Start the Remote AI Agent:
    ```bash
    uvicorn remote_agent:app --reload
    ```
-4. In a new terminal, run the Client AI Agent:
+5. In a new terminal, run the Client AI Agent:
    ```bash
    python client_agent.py
    ```

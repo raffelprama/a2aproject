@@ -13,3 +13,7 @@
 ## [YYYY-MM-DD] LangGraph & LLM Integration
 - Integrated LangGraph and dekallm LLM (Qwen/qwen25-72b-instruct) into remote_agent.py for query understanding and employee search.
 - Updated client_agent.py to optionally use the same LLM for parsing user queries before sending to the remote agent. 
+
+## [YYYY-MM-DD] LangGraph State Schema Fix & Docs Update
+- Fixed remote_agent.py by adding a state schema (Pydantic BaseModel) for LangGraph initialization.
+- Updated README.md to document .env usage and new dependencies (python-dotenv, pydantic). 

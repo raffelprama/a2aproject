@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from typing import List, Dict
 import httpx
 import os
+from pydantic import BaseModel
 
 # LangGraph and LangChain imports
 from langchain_core.tools import tool
@@ -56,7 +57,8 @@ api_key = os.getenv('API_KEY')
 base_url = os.getenv('API_URL')
 model = os.getenv('MODEL')
 
-
+class EmployeeSearchState(BaseModel):
+    query: str
 
 @app.get("/")
 def root():
@@ -94,9 +96,10 @@ async def call_llm(query: str) -> dict:
             return {}
 
 @tool
-async def employee_search_tool(query: str) -> List[Dict]:
+def employee_search_tool(query: str) -> List[Dict]:
     """Search employees by criteria extracted from the query using LLM."""
-    criteria = await call_llm(query)
+    import asyncio
+    criteria = asyncio.run(call_llm(query))
     if not criteria:
         return []
     results = EMPLOYEES
@@ -119,7 +122,7 @@ async def employee_search_tool(query: str) -> List[Dict]:
 
 # LangGraph state and workflow
 def build_graph():
-    graph = StateGraph()
+    graph = StateGraph(EmployeeSearchState)
     graph.add_tool("employee_search", employee_search_tool)
     graph.set_entry_point("employee_search")
     graph.set_finish_point(END)
