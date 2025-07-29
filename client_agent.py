@@ -21,13 +21,23 @@ async def call_llm(query: str) -> dict:
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
+    prompt = (
+        "You are an assistant that extracts employee search criteria (id, name, country, job_role) from user queries. "
+        "Return a JSON object with any found fields.\n"
+        "Examples:\n"
+        "User: who is the hr manager\nOutput: {\"job_role\": \"HR Manager\"}\n"
+        "User: find employee with ID 2\nOutput: {\"id\": 2}\n"
+        "User: show me employees in marketing\nOutput: {\"job_role\": \"Marketing Specialist\"}\n"
+        "User: who is Alice Smith\nOutput: {\"name\": \"Alice Smith\"}\n"
+        "User: employees in Japan\nOutput: {\"country\": \"Japan\"}"
+    )
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are an assistant that extracts employee search criteria (id, name, country, job_role) from user queries. Return a JSON object with any found fields."},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": query}
         ],
-        "temperature": 0.0
+        "temperature": 0.2
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(base_url, headers=headers, json=payload, timeout=15)
@@ -35,9 +45,12 @@ async def call_llm(query: str) -> dict:
         data = response.json()
         try:
             content = data["choices"][0]["message"]["content"]
+            import re
+            content = re.sub(r"^```json\\s*|```$", "", content.strip(), flags=re.MULTILINE)
             criteria = json.loads(content)
             return criteria
-        except Exception:
+        except Exception as e:
+            print("LLM parse error:", e)
             return {}
 
 def main():

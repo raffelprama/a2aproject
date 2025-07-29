@@ -57,8 +57,10 @@ api_key = os.getenv('API_KEY')
 base_url = os.getenv('API_URL')
 model = os.getenv('MODEL')
 
+# Update EmployeeSearchState to include results
 class EmployeeSearchState(BaseModel):
     query: str
+    results: List[Dict] = []
 
 @app.get("/")
 def root():
@@ -74,32 +76,47 @@ async def call_llm(query: str) -> dict:
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
+    prompt = (
+        "You are an assistant that extracts employee search criteria (id, name, country, job_role) from user queries. "
+        "Return a JSON object with any found fields.\n"
+        "Examples:\n"
+        "User: who is the hr manager\nOutput: {\"job_role\": \"HR Manager\"}\n"
+        "User: find employee with ID 2\nOutput: {\"id\": 2}\n"
+        "User: show me employees in marketing\nOutput: {\"job_role\": \"Marketing Specialist\"}\n"
+        "User: who is Alice Smith\nOutput: {\"name\": \"Alice Smith\"}\n"
+        "User: employees in Japan\nOutput: {\"country\": \"Japan\"}"
+    )
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are an assistant that extracts employee search criteria (id, name, country, job_role) from user queries. Return a JSON object with any found fields."},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": query}
         ],
-        "temperature": 0.0
+        "temperature": 0.2
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(base_url, headers=headers, json=payload, timeout=15)
+        print(payload)
         response.raise_for_status()
         data = response.json()
+        print(data)
         # Try to extract the JSON from the LLM's response
         try:
             content = data["choices"][0]["message"]["content"]
+            import re
+            content = re.sub(r"^```json\\s*|```$", "", content.strip(), flags=re.MULTILINE)
             import json as pyjson
             criteria = pyjson.loads(content)
             return criteria
-        except Exception:
+        except Exception as e:
+            print("LLM parse error:", e)
             return {}
 
 @tool
-def employee_search_tool(query: str) -> List[Dict]:
+async def employee_search_tool(query: str) -> List[Dict]:
     """Search employees by criteria extracted from the query using LLM."""
-    import asyncio
-    criteria = asyncio.run(call_llm(query))
+    criteria = await call_llm(query)
+    print("LLM criteria:", criteria)
     if not criteria:
         return []
     results = EMPLOYEES
@@ -118,14 +135,20 @@ def employee_search_tool(query: str) -> List[Dict]:
     if "job_role" in criteria:
         job_val = criteria["job_role"].lower()
         results = [e for e in results if job_val in e["job_role"].lower()]
+    print("Filtered results:", results)
     return results
+
+# Wrapper node to extract query from state and call the tool
+async def employee_search_node(state: EmployeeSearchState) -> dict:
+    results = await employee_search_tool.ainvoke(state.query)
+    return {"query": state.query, "results": results}
 
 # LangGraph state and workflow
 def build_graph():
     graph = StateGraph(EmployeeSearchState)
-    graph.add_tool("employee_search", employee_search_tool)
+    graph.add_node("employee_search", employee_search_node)
     graph.set_entry_point("employee_search")
-    graph.set_finish_point(END)
+    graph.set_finish_point("employee_search")
     return graph.compile()
 
 langraph_workflow = build_graph()
@@ -138,5 +161,5 @@ async def a2a_task(request: Request):
     if not query:
         raise HTTPException(status_code=400, detail="Missing query.")
     # Run the LangGraph workflow
-    results = await langraph_workflow.ainvoke({"query": query})
-    return {"results": results} 
+    state = await langraph_workflow.ainvoke({"query": query})
+    return {"results": state["results"]} 
