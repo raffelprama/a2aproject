@@ -1,16 +1,18 @@
-# A2A Employee Information System (V2)
+# A2A Employee Information System (V4)
 
-This project demonstrates an expanded Agent-to-Agent (A2A) communication system for retrieving various types of employee information using three Python-based AI agents:
+This project demonstrates an expanded Agent-to-Agent (A2A) communication system for retrieving various types of employee information using three Python-based AI agents with LLM-powered natural language processing:
 
 - **Employee Information Agent:** Manages and serves general employee data via a RESTful API (A2A protocol, FastAPI/Uvicorn).
 - **HR Agent:** Manages and serves sensitive HR-related data (salary, job hierarchy, schedules) via a separate RESTful API.
-- **Client AI Agent (V2):** CLI tool that intelligently routes queries to the appropriate agent and displays results.
+- **Client AI Agent (V4):** LLM-powered CLI tool that intelligently routes queries, clarifies user input, and generates natural language responses.
 
 ## Features
 - In-memory dummy employee data (30 records)
 - In-memory dummy HR data (salaries, job hierarchy, work schedules)
 - A2A-compliant REST APIs (FastAPI) for both agents
-- Intelligent query routing in Client Agent
+- **LLM-powered query clarification and natural language processing**
+- **Intelligent query routing with multi-agent communication**
+- **Natural language response generation**
 - CLI-based chatbot for querying employee and HR data
 - Simulated API key authentication (dekallm)
 - Agent orchestration using LangGraph
@@ -45,45 +47,60 @@ This project demonstrates an expanded Agent-to-Agent (A2A) communication system 
    ```bash
    uvicorn hr_agent:app --reload --port 8001
    ```
-6. Run the Client AI Agent (V2):
+6. Run the Client AI Agent (V4):
    ```bash
-   python client_agent_v2.py
+   python client_agent_v4.py
    ```
 
 ## Usage
 
-### Employee Information Queries
-- `find employee with ID 123`
-- `who is John Doe`
-- `employees in marketing`
-- `show me employees in Japan`
+### Natural Language Queries
+The system now supports natural language input with LLM-powered clarification:
 
-### HR Queries
-- `what is Alice Smith's salary`
-- `salary for ID 1`
-- `who reports to Product Manager`
-- `hierarchy for Software Engineer`
-- `what is Bob Johnson's schedule`
-- `schedule for ID 2`
+**Input Examples:**
+- `bob salary`
+- `alice schedule`
+- `find marketing people`
+- `who is employee 5`
+- `show hierarchy`
 
-The Client Agent will automatically route your query to the appropriate agent and display the results.
+**LLM Processing Flow:**
+1. **Query Clarification**: `"bob salary"` → `"What is Bob Johnson's salary?"`
+2. **Smart Routing**: Determines which agent(s) to use
+3. **Natural Response**: Generates conversational responses
+
+### Example Interactions
+
+**Input:** `"bob salary"`
+**Response:** `"Bob Johnson (ID: 2) is a Data Scientist from Canada. His base salary is 85,000 CAD and he is eligible for bonuses."`
+
+**Input:** `"alice schedule"`
+**Response:** `"Alice Smith works as a Software Engineer from the United States. Her schedule is Monday to Friday, 9:00 AM to 5:00 PM EST, with a standard day shift."`
+
+The Client Agent V4 automatically routes your query to the appropriate agent(s) and provides natural language responses.
 
 ## Project Structure
 - `remote_agent.py` - Employee Information Agent (FastAPI server on port 8000)
 - `hr_agent.py` - HR Agent (FastAPI server on port 8001)
+- `client_agent.py` - Original Client Agent
 - `client_agent_v2.py` - Client AI Agent with routing (CLI tool)
+- `client_agent_v3.py` - Client AI Agent with multi-agent communication
+- `client_agent_v4.py` - **Client AI Agent V4 (LLM-powered)** - Current version
 - `hr_dummy_data.py` - HR dummy data (salaries, hierarchy, schedules)
 - `SRS.md` - Software Requirements Specification (V2)
 - `log.md` - Development log
 
 ## System Architecture
 ```
-Client Agent (V2) → Employee Info Agent (Port 8000)
-                → HR Agent (Port 8001)
+Client Agent (V4) → Employee Info Agent (Port 8000)
+(LLM-Powered)     → HR Agent (Port 8001)
+                ↓
+        LLM Processing
+    (Clarification & Response)
 ```
 
 ## Notes
 - All employee and HR data is in-memory and for demonstration only.
 - API key authentication is simulated (not secure).
-- The Client Agent V2 intelligently routes queries based on keywords.
+- The Client Agent V4 uses LLM for query clarification and natural response generation.
 - See `SRS.md` for detailed requirements and architecture. 

@@ -75,6 +75,7 @@ async def call_llm(query: str) -> dict:
         response = await client.post(base_url, headers=headers, json=payload, timeout=15)
         response.raise_for_status()
         data = response.json()
+        print(f"\n\ndata = {data}")
         try:
             content = data["choices"][0]["message"]["content"]
             import re
@@ -83,15 +84,15 @@ async def call_llm(query: str) -> dict:
             criteria = pyjson.loads(content)
             return criteria
         except Exception as e:
-            print("LLM parse error:", e)
-            print("Raw LLM response:", content if 'content' in locals() else "No content")
+            print("\nLLM parse error:", e)
+            print("\nRaw LLM response:", content if 'content' in locals() else "No content")
             return {}
 
 @tool
 async def salary_search_tool(query: str) -> List[Dict]:
     """Search employee salary information by criteria extracted from the query using LLM."""
     criteria = await call_llm(query)
-    print("LLM criteria for salary:", criteria)
+    print("\nLLM criteria for salary:", criteria)
     if not criteria:
         return []
     
@@ -147,7 +148,7 @@ async def salary_search_tool(query: str) -> List[Dict]:
 async def hierarchy_search_tool(query: str) -> List[Dict]:
     """Search job hierarchy information by criteria extracted from the query using LLM."""
     criteria = await call_llm(query)
-    print("LLM criteria for hierarchy:", criteria)
+    print("\nLLM criteria for hierarchy:", criteria)
     if not criteria:
         return []
     
@@ -162,14 +163,14 @@ async def hierarchy_search_tool(query: str) -> List[Dict]:
         if match:
             results.append(hierarchy_record)
     
-    print("Hierarchy search results:", results)
+    print("\nHierarchy search results:", results)
     return results
 
 @tool
 async def schedule_search_tool(query: str) -> List[Dict]:
     """Search employee work schedule information by criteria extracted from the query using LLM."""
     criteria = await call_llm(query)
-    print("LLM criteria for schedule:", criteria)
+    print("\nLLM criteria for schedule:", criteria)
     if not criteria:
         return []
     
@@ -218,7 +219,7 @@ async def schedule_search_tool(query: str) -> List[Dict]:
         if match:
             results.append(schedule_record)
     
-    print("Schedule search results:", results)
+    print("\nSchedule search results:", results)
     return results
 
 # Combined HR search node that handles all query types

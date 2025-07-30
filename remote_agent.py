@@ -96,10 +96,9 @@ async def call_llm(query: str) -> dict:
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(base_url, headers=headers, json=payload, timeout=15)
-        print(payload)
         response.raise_for_status()
         data = response.json()
-        print(data)
+        print(f"\n\ndata = {data}")
         # Try to extract the JSON from the LLM's response
         try:
             content = data["choices"][0]["message"]["content"]
@@ -109,14 +108,14 @@ async def call_llm(query: str) -> dict:
             criteria = pyjson.loads(content)
             return criteria
         except Exception as e:
-            print("LLM parse error:", e)
+            print("\nLLM parse error:", e)
             return {}
 
 @tool
 async def employee_search_tool(query: str) -> List[Dict]:
     """Search employees by criteria extracted from the query using LLM."""
     criteria = await call_llm(query)
-    print("LLM criteria:", criteria)
+    print("\nLLM criteria:", criteria)
     if not criteria:
         return []
     results = EMPLOYEES
@@ -135,7 +134,7 @@ async def employee_search_tool(query: str) -> List[Dict]:
     if "job_role" in criteria:
         job_val = criteria["job_role"].lower()
         results = [e for e in results if job_val in e["job_role"].lower()]
-    print("Filtered results:", results)
+    print("\nFiltered results:", results)
     return results
 
 # Wrapper node to extract query from state and call the tool
