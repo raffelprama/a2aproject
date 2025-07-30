@@ -43,7 +43,17 @@ EMPLOYEES = [
     {"id": 27, "name": "Anna Chen", "country": "China", "job_role": "Software Engineer"},
     {"id": 28, "name": "Ben Taylor", "country": "Russia", "job_role": "Data Scientist"},
     {"id": 29, "name": "Chloe Moore", "country": "Egypt", "job_role": "Marketing Specialist"},
-    {"id": 30, "name": "David Wilson", "country": "South Africa", "job_role": "Financial Analyst"}
+    {"id": 30, "name": "David Wilson", "country": "South Africa", "job_role": "Financial Analyst"},
+    {"id": 31, "name": "Sarah CEO", "country": "USA", "job_role": "CEO"},
+    {"id": 32, "name": "Mike CTO", "country": "Canada", "job_role": "CTO"},
+    {"id": 33, "name": "Lisa CFO", "country": "UK", "job_role": "CFO"},
+    {"id": 34, "name": "Tom COO", "country": "Germany", "job_role": "COO"},
+    {"id": 35, "name": "Emma CMO", "country": "France", "job_role": "CMO"},
+    {"id": 36, "name": "Alex VP Engineering", "country": "Japan", "job_role": "VP Engineering"},
+    {"id": 37, "name": "Jordan VP Sales", "country": "Brazil", "job_role": "VP Sales"},
+    {"id": 38, "name": "Casey VP Marketing", "country": "India", "job_role": "VP Marketing"},
+    {"id": 39, "name": "Riley Director IT", "country": "South Korea", "job_role": "Director IT"},
+    {"id": 40, "name": "Taylor Director HR", "country": "Spain", "job_role": "Director HR"}
 ]
 
 from dotenv import load_dotenv
@@ -84,7 +94,9 @@ async def call_llm(query: str) -> dict:
         "User: find employee with ID 2\nOutput: {\"id\": 2}\n"
         "User: show me employees in marketing\nOutput: {\"job_role\": \"Marketing Specialist\"}\n"
         "User: who is Alice Smith\nOutput: {\"name\": \"Alice Smith\"}\n"
-        "User: employees in Japan\nOutput: {\"country\": \"Japan\"}"
+        "User: employees in Japan\nOutput: {\"country\": \"Japan\"}\n"
+        "User: all employees\nOutput: {\"all\": true}\n"
+        "User: show all employees\nOutput: {\"all\": true}"
     )
     payload = {
         "model": model,
@@ -115,9 +127,16 @@ async def call_llm(query: str) -> dict:
 async def employee_search_tool(query: str) -> List[Dict]:
     """Search employees by criteria extracted from the query using LLM."""
     criteria = await call_llm(query)
-    print("\nLLM criteria:", criteria)
+    print(f"\nLLM criteria:{criteria}")
     if not criteria:
         return []
+    
+    # Handle "all employees" query
+    if "all" in criteria and criteria["all"]:
+        print("\nReturning all employees")
+        print(EMPLOYEES)
+        return EMPLOYEES
+    
     results = EMPLOYEES
     if "id" in criteria:
         try:

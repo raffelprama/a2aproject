@@ -1,24 +1,24 @@
 # Development Log for A2A Employee Information System
 
-## [YYYY-MM-DD] Initial Setup
+## [2025-07-29] Initial Setup
 - Created `SRS.md` with detailed software requirements specification.
 - Created `README.md` with project overview and setup instructions.
 - Created `log.md` to track project progress and changes.
 
-## [YYYY-MM-DD] Next Steps
+## [2025-07-29] Next Steps
 - Implement `remote_agent.py` (FastAPI server for employee data).
 - Implement `client_agent.py` (CLI client for querying employee data).
 - Add requirements.txt or pyproject.toml for dependencies. 
 
-## [YYYY-MM-DD] LangGraph & LLM Integration
+## [2025-07-29] LangGraph & LLM Integration
 - Integrated LangGraph and dekallm LLM (Qwen/qwen25-72b-instruct) into remote_agent.py for query understanding and employee search.
 - Updated client_agent.py to optionally use the same LLM for parsing user queries before sending to the remote agent. 
 
-## [YYYY-MM-DD] LangGraph State Schema Fix & Docs Update
+## [2025-07-29] LangGraph State Schema Fix & Docs Update
 - Fixed remote_agent.py by adding a state schema (Pydantic BaseModel) for LangGraph initialization.
 - Updated README.md to document .env usage and new dependencies (python-dotenv, pydantic). 
 
-## [YYYY-MM-DD] V2 Implementation - Multi-Agent System
+## [2025-07-29] V2 Implementation - Multi-Agent System
 - **SRS V2**: Updated SRS.md to specify three-agent architecture with Employee Info Agent, HR Agent, and enhanced Client Agent with routing.
 - **HR Data**: Created `hr_dummy_data.py` with comprehensive HR data including:
   - Salary information (30 records with base_salary, currency, bonus_eligibility)
@@ -69,4 +69,24 @@
 - Optimize LLM prompts for better accuracy
 - Add support for more complex multi-step queries
 - Consider adding conversation memory for follow-up questions
-- Implement advanced error recovery using LLM 
+- Implement advanced error recovery using LLM
+
+## [2025-07-30] V4 Enhancement - Universal Comparison Features
+- **New Employee Roles**: Added 10 new executive roles (CEO, CTO, CFO, COO, CMO, VP Engineering, VP Sales, VP Marketing, Director IT, Director HR) to `remote_agent.py`
+- **Enhanced HR Data**: Updated `hr_dummy_data.py` with salary, hierarchy, and schedule data for all 40 employees
+- **Comparison Queries**: Added universal comparison capabilities to `client_agent_v4.py`:
+  - **Highest/Lowest Salary**: `who has highest salary`, `who has lowest salary`
+  - **Highest/Lowest Role**: `who has highest role`, `who has lowest role`
+  - **Role Hierarchy**: Defined 8-level hierarchy system (CEO=1, CTO/CFO/COO/CMO=2, VPs=3, Directors=4, etc.)
+  - **Multi-Agent Integration**: Comparison queries combine data from both Employee Info and HR agents
+- **Enhanced Routing**: Updated `determine_agent_and_query_type()` to recognize comparison queries
+- **New Functions**: Added `get_all_employees()`, `get_all_salaries()`, and `perform_comparison()` functions
+- **Documentation**: Updated README.md with new comparison examples and responses
+- **System Capabilities**: Now supports 4 query types: employee info, HR data, multi-agent, and universal comparisons
+
+## [2025-07-30] Next Steps for V4 Enhanced
+- Test comparison queries with various scenarios
+- Add more comparison types (by department, location, etc.)
+- Implement ranking queries (top 5 salaries, etc.)
+- Add statistical analysis features
+- Consider adding data visualization capabilities 

@@ -52,7 +52,9 @@ async def call_llm(query: str) -> dict:
         "Fiona White, George Green, Hannah Black, Ivy King, Jack Lee, Karen Hall, Liam Scott, "
         "Mia Adams, Noah Baker, Olivia Wright, Peter Clark, Quinn Lewis, Rachel Young, Sam Harris, "
         "Tina Walker, Uma Garcia, Victor Rodriguez, Wendy Martinez, Xavier Perez, Yara Sanchez, "
-        "Zack Kim, Anna Chen, Ben Taylor, Chloe Moore, David Wilson.\n"
+        "Zack Kim, Anna Chen, Ben Taylor, Chloe Moore, David Wilson, Sarah CEO, Mike CTO, Lisa CFO, "
+        "Tom COO, Emma CMO, Alex VP Engineering, Jordan VP Sales, Casey VP Marketing, Riley Director IT, "
+        "Taylor Director HR.\n"
         "Return a JSON object with any found fields.\n"
         "Examples:\n"
         "User: what is Alice Smith's salary\nOutput: {\"name\": \"Alice Smith\"}\n"
@@ -61,7 +63,9 @@ async def call_llm(query: str) -> dict:
         "User: who reports to Product Manager\nOutput: {\"job_role\": \"Product Manager\"}\n"
         "User: schedule for Bob Johnson\nOutput: {\"name\": \"Bob Johnson\"}\n"
         "User: hierarchy for Software Engineer\nOutput: {\"job_role\": \"Software Engineer\"}\n"
-        "User: what is Zack's salary\nOutput: {\"name\": \"Zack Kim\"}"
+        "User: what is Zack's salary\nOutput: {\"name\": \"Zack Kim\"}\n"
+        "User: all salaries\nOutput: {\"all\": true}\n"
+        "User: show all salaries\nOutput: {\"all\": true}"
     )
     payload = {
         "model": model,
@@ -93,6 +97,13 @@ async def salary_search_tool(query: str) -> List[Dict]:
     """Search employee salary information by criteria extracted from the query using LLM."""
     criteria = await call_llm(query)
     print("\nLLM criteria for salary:", criteria)
+    
+    # Handle "all salaries" query - check both LLM result and direct query
+    if (criteria and "all" in criteria and criteria["all"]) or "all salaries" in query.lower():
+        print("\nReturning all salaries")
+        print(f"Total salary records: {len(HR_SALARIES_DATA)}")
+        return HR_SALARIES_DATA
+    
     if not criteria:
         return []
     
@@ -119,7 +130,11 @@ async def salary_search_tool(query: str) -> List[Dict]:
                 "sam harris": 19, "tina walker": 20, "uma garcia": 21,
                 "victor rodriguez": 22, "wendy martinez": 23, "xavier perez": 24,
                 "yara sanchez": 25, "zack kim": 26, "anna chen": 27,
-                "ben taylor": 28, "chloe moore": 29, "david wilson": 30
+                "ben taylor": 28, "chloe moore": 29, "david wilson": 30,
+                "sarah ceo": 31, "mike cto": 32, "lisa cfo": 33,
+                "tom coo": 34, "emma cmo": 35, "alex vp engineering": 36,
+                "jordan vp sales": 37, "casey vp marketing": 38,
+                "riley director it": 39, "taylor director hr": 40
             }
             search_name = criteria["name"].lower()
             
@@ -226,6 +241,8 @@ async def schedule_search_tool(query: str) -> List[Dict]:
 async def hr_search_node(state: HRQueryState) -> dict:
     query_type = state.query_type.lower()
     
+    print(f"🔍 HR search node: query='{state.query}', query_type='{query_type}'")
+    
     if query_type == "salary":
         results = await salary_search_tool.ainvoke(state.query)
     elif query_type == "hierarchy":
@@ -236,21 +253,15 @@ async def hr_search_node(state: HRQueryState) -> dict:
         # Default to salary search
         results = await salary_search_tool.ainvoke(state.query)
     
+    print(f"📊 HR search results: {len(results)} items")
     return {"query": state.query, "query_type": state.query_type, "results": results}
 
 # LangGraph state and workflow
 def build_graph():
     graph = StateGraph(HRQueryState)
-    
-    # Add single node that handles all query types
     graph.add_node("hr_search", hr_search_node)
-    
-    # Set entry point
     graph.set_entry_point("hr_search")
-    
-    # Set finish point
     graph.set_finish_point("hr_search")
-    
     return graph.compile()
 
 langraph_workflow = build_graph()
@@ -262,9 +273,12 @@ async def hr_task(request: Request):
     query = body.get("query", "")
     query_type = body.get("query_type", "general")
     
+    print(f"\n📥 HR Agent received: query='{query}', query_type='{query_type}'")
+    
     if not query:
         raise HTTPException(status_code=400, detail="Missing query.")
     
     # Run the LangGraph workflow
     state = await langraph_workflow.ainvoke({"query": query, "query_type": query_type})
+    print(f"📤 HR Agent returning: {len(state['results'])} results")
     return {"results": state["results"]} 

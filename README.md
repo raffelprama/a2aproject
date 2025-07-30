@@ -63,6 +63,10 @@ The system now supports natural language input with LLM-powered clarification:
 - `find marketing people`
 - `who is employee 5`
 - `show hierarchy`
+- `who has highest salary`
+- `who has lowest salary`
+- `who has highest role`
+- `who has lowest role`
 
 **LLM Processing Flow:**
 1. **Query Clarification**: `"bob salary"` → `"What is Bob Johnson's salary?"`
@@ -76,6 +80,12 @@ The system now supports natural language input with LLM-powered clarification:
 
 **Input:** `"alice schedule"`
 **Response:** `"Alice Smith works as a Software Engineer from the United States. Her schedule is Monday to Friday, 9:00 AM to 5:00 PM EST, with a standard day shift."`
+
+**Input:** `"who has highest salary"`
+**Response:** `"Sarah CEO has the highest salary: 250,000 USD"`
+
+**Input:** `"who has lowest role"`
+**Response:** `"David Wilson has the lowest role: Financial Analyst (Level 8)"`
 
 The Client Agent V4 automatically routes your query to the appropriate agent(s) and provides natural language responses.
 

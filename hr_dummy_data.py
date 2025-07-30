@@ -30,7 +30,17 @@ HR_SALARIES_DATA = [
     {"employee_id": 27, "base_salary": 76000.00, "currency": "CNY", "bonus_eligibility": True},
     {"employee_id": 28, "base_salary": 82000.00, "currency": "RUB", "bonus_eligibility": True},
     {"employee_id": 29, "base_salary": 67000.00, "currency": "EGP", "bonus_eligibility": False},
-    {"employee_id": 30, "base_salary": 65000.00, "currency": "ZAR", "bonus_eligibility": False}
+    {"employee_id": 30, "base_salary": 65000.00, "currency": "ZAR", "bonus_eligibility": False},
+    {"employee_id": 31, "base_salary": 250000.00, "currency": "USD", "bonus_eligibility": True},
+    {"employee_id": 32, "base_salary": 200000.00, "currency": "CAD", "bonus_eligibility": True},
+    {"employee_id": 33, "base_salary": 180000.00, "currency": "GBP", "bonus_eligibility": True},
+    {"employee_id": 34, "base_salary": 160000.00, "currency": "EUR", "bonus_eligibility": True},
+    {"employee_id": 35, "base_salary": 140000.00, "currency": "EUR", "bonus_eligibility": True},
+    {"employee_id": 36, "base_salary": 120000.00, "currency": "JPY", "bonus_eligibility": True},
+    {"employee_id": 37, "base_salary": 110000.00, "currency": "BRL", "bonus_eligibility": True},
+    {"employee_id": 38, "base_salary": 100000.00, "currency": "INR", "bonus_eligibility": True},
+    {"employee_id": 39, "base_salary": 95000.00, "currency": "KRW", "bonus_eligibility": True},
+    {"employee_id": 40, "base_salary": 90000.00, "currency": "EUR", "bonus_eligibility": True}
 ]
 
 HR_JOB_HIERARCHY_DATA = [
@@ -71,7 +81,15 @@ HR_JOB_HIERARCHY_DATA = [
     {"job_role": "Cybersecurity Analyst", "reports_to": "IT Manager", "level": 4},
     {"job_role": "IT Manager", "reports_to": "CTO", "level": 3}, # Simplified for demo
     {"job_role": "Product Designer", "reports_to": "UX Designer", "level": 5},
-    {"job_role": "Machine Learning Engineer", "reports_to": "Lead Data Scientist", "level": 4}
+    {"job_role": "Machine Learning Engineer", "reports_to": "Lead Data Scientist", "level": 4},
+    {"job_role": "CFO", "reports_to": "CEO", "level": 2},
+    {"job_role": "COO", "reports_to": "CEO", "level": 2},
+    {"job_role": "CMO", "reports_to": "CEO", "level": 2},
+    {"job_role": "VP Engineering", "reports_to": "CTO", "level": 3},
+    {"job_role": "VP Sales", "reports_to": "COO", "level": 3},
+    {"job_role": "VP Marketing", "reports_to": "CMO", "level": 3},
+    {"job_role": "Director IT", "reports_to": "VP Engineering", "level": 4},
+    {"job_role": "Director HR", "reports_to": "CFO", "level": 4}
 ]
 
 HR_SCHEDULES_DATA = [
@@ -104,5 +122,15 @@ HR_SCHEDULES_DATA = [
     {"employee_id": 27, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "09:00 PM", "end_time": "05:00 AM", "timezone": "CST", "shift_type": "Night"}, # Night Shift
     {"employee_id": 28, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "10:00 PM", "end_time": "06:00 AM", "timezone": "MSK", "shift_type": "Night"}, # Night Shift
     {"employee_id": 29, "work_days": ["Saturday", "Sunday"], "start_time": "08:00 AM", "end_time": "04:00 PM", "timezone": "EET", "shift_type": "Weekend"}, # Weekend Shift
-    {"employee_id": 30, "work_days": ["Saturday", "Sunday"], "start_time": "10:00 AM", "end_time": "06:00 PM", "timezone": "SAST", "shift_type": "Weekend"}  # Weekend Shift
+    {"employee_id": 30, "work_days": ["Saturday", "Sunday"], "start_time": "10:00 AM", "end_time": "06:00 PM", "timezone": "SAST", "shift_type": "Weekend"},  # Weekend Shift
+    {"employee_id": 31, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "EST", "shift_type": "Day"},
+    {"employee_id": 32, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "EST", "shift_type": "Day"},
+    {"employee_id": 33, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "GMT", "shift_type": "Day"},
+    {"employee_id": 34, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "CET", "shift_type": "Day"},
+    {"employee_id": 35, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "CET", "shift_type": "Day"},
+    {"employee_id": 36, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "JST", "shift_type": "Day"},
+    {"employee_id": 37, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "BRT", "shift_type": "Day"},
+    {"employee_id": 38, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "IST", "shift_type": "Day"},
+    {"employee_id": 39, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "KST", "shift_type": "Day"},
+    {"employee_id": 40, "work_days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "start_time": "08:00 AM", "end_time": "06:00 PM", "timezone": "CET", "shift_type": "Day"}
 ] 
