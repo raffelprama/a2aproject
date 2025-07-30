@@ -1,27 +1,17 @@
 from fastapi import FastAPI, HTTPException, Request
-from typing import List, Dict, Optional
+from typing import List, Dict
 import httpx
 import os
 from pydantic import BaseModel
-
-# LangGraph and LangChain imports
 from langchain_core.tools import tool
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.runnables import Runnable
-
-# Import HR dummy data
+from langgraph.graph import StateGraph
 from hr_dummy_data import HR_SALARIES_DATA, HR_JOB_HIERARCHY_DATA, HR_SCHEDULES_DATA
+from dotenv import load_dotenv
 
 app = FastAPI()
 
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
-
-# Access the API key
 api_key = os.getenv('API_KEY')
 base_url = os.getenv('API_URL')
 model = os.getenv('MODEL')
@@ -47,7 +37,6 @@ async def call_llm(query: str) -> dict:
     }
     prompt = (
         "You are an assistant that extracts employee search criteria from user queries. "
-        "IMPORTANT: For names, extract the FULL NAME when possible. "
         "Available employee names: Alice Smith, Bob Johnson, Charlie Brown, Diana Miller, Ethan Davis, "
         "Fiona White, George Green, Hannah Black, Ivy King, Jack Lee, Karen Hall, Liam Scott, "
         "Mia Adams, Noah Baker, Olivia Wright, Peter Clark, Quinn Lewis, Rachel Young, Sam Harris, "
@@ -94,70 +83,9 @@ async def call_llm(query: str) -> dict:
 
 @tool
 async def salary_search_tool(query: str) -> List[Dict]:
-    """Search employee salary information by criteria extracted from the query using LLM."""
-    criteria = await call_llm(query)
-    print("\nLLM criteria for salary:", criteria)
-    
-    # Handle "all salaries" query - check both LLM result and direct query
-    if (criteria and "all" in criteria and criteria["all"]) or "all salaries" in query.lower():
-        print("\nReturning all salaries")
-        print(f"Total salary records: {len(HR_SALARIES_DATA)}")
-        return HR_SALARIES_DATA
-    
-    if not criteria:
-        return []
-    
-    results = []
-    for salary_record in HR_SALARIES_DATA:
-        match = True
-        if "id" in criteria:
-            try:
-                id_val = int(criteria["id"])
-                if salary_record["employee_id"] != id_val:
-                    match = False
-            except Exception:
-                match = False
-        elif "name" in criteria:
-            # HR Agent now expects employee_id to be passed from Employee Info Agent
-            # For direct queries, we'll use a simple mapping
-            name_to_id_map = {
-                "alice smith": 1, "bob johnson": 2, "charlie brown": 3,
-                "diana miller": 4, "ethan davis": 5, "fiona white": 6,
-                "george green": 7, "hannah black": 8, "ivy king": 9,
-                "jack lee": 10, "karen hall": 11, "liam scott": 12,
-                "mia adams": 13, "noah baker": 14, "olivia wright": 15,
-                "peter clark": 16, "quinn lewis": 17, "rachel young": 18,
-                "sam harris": 19, "tina walker": 20, "uma garcia": 21,
-                "victor rodriguez": 22, "wendy martinez": 23, "xavier perez": 24,
-                "yara sanchez": 25, "zack kim": 26, "anna chen": 27,
-                "ben taylor": 28, "chloe moore": 29, "david wilson": 30,
-                "sarah ceo": 31, "mike cto": 32, "lisa cfo": 33,
-                "tom coo": 34, "emma cmo": 35, "alex vp engineering": 36,
-                "jordan vp sales": 37, "casey vp marketing": 38,
-                "riley director it": 39, "taylor director hr": 40
-            }
-            search_name = criteria["name"].lower()
-            
-            # Try exact match first
-            if search_name in name_to_id_map:
-                if salary_record["employee_id"] != name_to_id_map[search_name]:
-                    match = False
-            else:
-                # Try partial matching for first names
-                for full_name, emp_id in name_to_id_map.items():
-                    if search_name in full_name or full_name.startswith(search_name):
-                        if salary_record["employee_id"] != emp_id:
-                            match = False
-                        break
-                else:
-                    # No match found
-                    match = False
-        
-        if match:
-            results.append(salary_record)
-    
-    print("Salary search results:", results)
-    return results
+    """Always return all salary data for any query."""
+    print("\nReturning all salaries (no filtering)")
+    return HR_SALARIES_DATA
 
 @tool
 async def hierarchy_search_tool(query: str) -> List[Dict]:
@@ -200,8 +128,6 @@ async def schedule_search_tool(query: str) -> List[Dict]:
             except Exception:
                 match = False
         elif "name" in criteria:
-            # HR Agent now expects employee_id to be passed from Employee Info Agent
-            # For direct queries, we'll use a simple mapping
             name_to_id_map = {
                 "alice smith": 1, "bob johnson": 2, "charlie brown": 3,
                 "diana miller": 4, "ethan davis": 5, "fiona white": 6,
@@ -216,19 +142,16 @@ async def schedule_search_tool(query: str) -> List[Dict]:
             }
             search_name = criteria["name"].lower()
             
-            # Try exact match first
             if search_name in name_to_id_map:
                 if schedule_record["employee_id"] != name_to_id_map[search_name]:
                     match = False
             else:
-                # Try partial matching for first names
                 for full_name, emp_id in name_to_id_map.items():
                     if search_name in full_name or full_name.startswith(search_name):
                         if schedule_record["employee_id"] != emp_id:
                             match = False
                         break
                 else:
-                    # No match found
                     match = False
         
         if match:
@@ -237,7 +160,6 @@ async def schedule_search_tool(query: str) -> List[Dict]:
     print("\nSchedule search results:", results)
     return results
 
-# Combined HR search node that handles all query types
 async def hr_search_node(state: HRQueryState) -> dict:
     query_type = state.query_type.lower()
     
@@ -250,13 +172,11 @@ async def hr_search_node(state: HRQueryState) -> dict:
     elif query_type == "schedule":
         results = await schedule_search_tool.ainvoke(state.query)
     else:
-        # Default to salary search
         results = await salary_search_tool.ainvoke(state.query)
     
     print(f"📊 HR search results: {len(results)} items")
     return {"query": state.query, "query_type": state.query_type, "results": results}
 
-# LangGraph state and workflow
 def build_graph():
     graph = StateGraph(HRQueryState)
     graph.add_node("hr_search", hr_search_node)
@@ -278,7 +198,6 @@ async def hr_task(request: Request):
     if not query:
         raise HTTPException(status_code=400, detail="Missing query.")
     
-    # Run the LangGraph workflow
     state = await langraph_workflow.ainvoke({"query": query, "query_type": query_type})
     print(f"📤 HR Agent returning: {len(state['results'])} results")
     return {"results": state["results"]} 

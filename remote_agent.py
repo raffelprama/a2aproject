@@ -3,12 +3,8 @@ from typing import List, Dict
 import httpx
 import os
 from pydantic import BaseModel
-
-# LangGraph and LangChain imports
 from langchain_core.tools import tool
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.runnables import Runnable
+from langgraph.graph import StateGraph
 
 app = FastAPI()
 
@@ -67,7 +63,6 @@ api_key = os.getenv('API_KEY')
 base_url = os.getenv('API_URL')
 model = os.getenv('MODEL')
 
-# Update EmployeeSearchState to include results
 class EmployeeSearchState(BaseModel):
     query: str
     results: List[Dict] = []
@@ -111,7 +106,6 @@ async def call_llm(query: str) -> dict:
         response.raise_for_status()
         data = response.json()
         print(f"\n\ndata = {data}")
-        # Try to extract the JSON from the LLM's response
         try:
             content = data["choices"][0]["message"]["content"]
             import re
@@ -131,10 +125,8 @@ async def employee_search_tool(query: str) -> List[Dict]:
     if not criteria:
         return []
     
-    # Handle "all employees" query
     if "all" in criteria and criteria["all"]:
         print("\nReturning all employees")
-        print(EMPLOYEES)
         return EMPLOYEES
     
     results = EMPLOYEES
@@ -156,12 +148,10 @@ async def employee_search_tool(query: str) -> List[Dict]:
     print("\nFiltered results:", results)
     return results
 
-# Wrapper node to extract query from state and call the tool
 async def employee_search_node(state: EmployeeSearchState) -> dict:
     results = await employee_search_tool.ainvoke(state.query)
     return {"query": state.query, "results": results}
 
-# LangGraph state and workflow
 def build_graph():
     graph = StateGraph(EmployeeSearchState)
     graph.add_node("employee_search", employee_search_node)
@@ -178,6 +168,5 @@ async def a2a_task(request: Request):
     query = body.get("query", "")
     if not query:
         raise HTTPException(status_code=400, detail="Missing query.")
-    # Run the LangGraph workflow
     state = await langraph_workflow.ainvoke({"query": query})
     return {"results": state["results"]} 

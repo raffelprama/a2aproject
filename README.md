@@ -1,18 +1,16 @@
 # A2A Employee Information System (V4)
 
-This project demonstrates an expanded Agent-to-Agent (A2A) communication system for retrieving various types of employee information using three Python-based AI agents with LLM-powered natural language processing:
+This project demonstrates a clean, production-ready Agent-to-Agent (A2A) system for employee information, where all backend agents return raw data and the client agent LLM does all reasoning, ranking, and answer formatting.
 
-- **Employee Information Agent:** Manages and serves general employee data via a RESTful API (A2A protocol, FastAPI/Uvicorn).
-- **HR Agent:** Manages and serves sensitive HR-related data (salary, job hierarchy, schedules) via a separate RESTful API.
-- **Client AI Agent (V4):** LLM-powered CLI tool that intelligently routes queries, clarifies user input, and generates natural language responses.
+- **Employee Information Agent:** Returns all employee data for relevant queries (no filtering/ranking).
+- **HR Agent:** Returns all salary, hierarchy, or schedule data for relevant queries (no filtering/ranking).
+- **Client AI Agent (V4):** LLM-powered CLI tool that fetches all data and uses the LLM to process, rank, and answer any user query (e.g., 'second highest salary', 'top 3', etc.).
 
 ## Features
-- In-memory dummy employee data (30 records)
-- In-memory dummy HR data (salaries, job hierarchy, work schedules)
+- In-memory dummy employee and HR data (40 records)
 - A2A-compliant REST APIs (FastAPI) for both agents
-- **LLM-powered query clarification and natural language processing**
-- **Intelligent query routing with multi-agent communication**
-- **Natural language response generation**
+- **LLM-powered query clarification, reasoning, and natural language response**
+- **All backend agents return raw data; all logic is handled by the client agent LLM**
 - CLI-based chatbot for querying employee and HR data
 - Simulated API key authentication (dekallm)
 - Agent orchestration using LangGraph
@@ -31,7 +29,7 @@ This project demonstrates an expanded Agent-to-Agent (A2A) communication system 
 1. Clone the repository and navigate to the `project` directory.
 2. Create a `.env` file in the project directory with the following content:
    ```env
-   API_KEY=sk-G1_wkZ37sEmY4eqnGdcNig
+   API_KEY=your_api_key_here
    API_URL=http://dekallm.cloudeka.ai/v1/chat/completions
    MODEL=qwen/qwen25-72b-instruct
    ```
@@ -39,15 +37,15 @@ This project demonstrates an expanded Agent-to-Agent (A2A) communication system 
    ```bash
    pip install fastapi uvicorn langchain langgraph python-dotenv pydantic httpx requests
    ```
-4. Start the Employee Information Agent:
+4. Start the Employee Info Agent (Port 8000):
    ```bash
    uvicorn remote_agent:app --reload --port 8000
    ```
-5. Start the HR Agent (in a new terminal):
+5. Start the HR Agent (Port 8001):
    ```bash
    uvicorn hr_agent:app --reload --port 8001
    ```
-6. Run the Client AI Agent (V4):
+6. Run the Client Agent (V4):
    ```bash
    python client_agent_v4.py
    ```
@@ -55,62 +53,52 @@ This project demonstrates an expanded Agent-to-Agent (A2A) communication system 
 ## Usage
 
 ### Natural Language Queries
-The system now supports natural language input with LLM-powered clarification:
-
-**Input Examples:**
-- `bob salary`
-- `alice schedule`
+- `who is the second highest salary`
+- `top 3 salaries`
+- `who has the lowest salary`
+- `who has the highest role`
 - `find marketing people`
-- `who is employee 5`
-- `show hierarchy`
-- `who has highest salary`
-- `who has lowest salary`
-- `who has highest role`
-- `who has lowest role`
+- `alice schedule`
 
-**LLM Processing Flow:**
-1. **Query Clarification**: `"bob salary"` → `"What is Bob Johnson's salary?"`
-2. **Smart Routing**: Determines which agent(s) to use
-3. **Natural Response**: Generates conversational responses
+**How it works:**
+- The client agent always fetches all relevant data (e.g., all salaries, all employees) from the backend agents.
+- The LLM in the client agent processes, ranks, and answers the query using the raw data.
+- All answer formatting and logic is handled by the LLM, not the backend agents.
 
 ### Example Interactions
 
-**Input:** `"bob salary"`
-**Response:** `"Bob Johnson (ID: 2) is a Data Scientist from Canada. His base salary is 85,000 CAD and he is eligible for bonuses."`
+**Input:** `who is the second highest salary`
+**Response:** `Mike CTO has the second highest salary: 200,000 CAD`
 
-**Input:** `"alice schedule"`
-**Response:** `"Alice Smith works as a Software Engineer from the United States. Her schedule is Monday to Friday, 9:00 AM to 5:00 PM EST, with a standard day shift."`
+**Input:** `top 3 salaries`
+**Response:** `1. Sarah CEO: 250,000 USD
+2. Mike CTO: 200,000 CAD
+3. Lisa CFO: 180,000 GBP`
 
-**Input:** `"who has highest salary"`
-**Response:** `"Sarah CEO has the highest salary: 250,000 USD"`
-
-**Input:** `"who has lowest role"`
-**Response:** `"David Wilson has the lowest role: Financial Analyst (Level 8)"`
-
-The Client Agent V4 automatically routes your query to the appropriate agent(s) and provides natural language responses.
+**Input:** `who has the lowest role`
+**Response:** `David Wilson has the lowest role: Financial Analyst (Level 8)`
 
 ## Project Structure
-- `remote_agent.py` - Employee Information Agent (FastAPI server on port 8000)
-- `hr_agent.py` - HR Agent (FastAPI server on port 8001)
-- `client_agent.py` - Original Client Agent
-- `client_agent_v2.py` - Client AI Agent with routing (CLI tool)
-- `client_agent_v3.py` - Client AI Agent with multi-agent communication
-- `client_agent_v4.py` - **Client AI Agent V4 (LLM-powered)** - Current version
+- `remote_agent.py` - Employee Information Agent (returns all employees for 'all employees' queries)
+- `hr_agent.py` - HR Agent (returns all salary data for salary queries)
+- `client_agent_v4.py` - LLM-powered client agent (all logic and answer formatting)
 - `hr_dummy_data.py` - HR dummy data (salaries, hierarchy, schedules)
-- `SRS.md` - Software Requirements Specification (V2)
+- `README.md` - This file
 - `log.md` - Development log
 
 ## System Architecture
 ```
-Client Agent (V4) → Employee Info Agent (Port 8000)
-(LLM-Powered)     → HR Agent (Port 8001)
-                ↓
-        LLM Processing
-    (Clarification & Response)
+Client Agent (V4, LLM-powered)
+        ↓
+Employee Info Agent (raw data)   HR Agent (raw data)
+        ↓                        ↓
+      [All data to LLM]
+        ↓
+   LLM does all reasoning
 ```
 
 ## Notes
 - All employee and HR data is in-memory and for demonstration only.
 - API key authentication is simulated (not secure).
-- The Client Agent V4 uses LLM for query clarification and natural response generation.
-- See `SRS.md` for detailed requirements and architecture. 
+- All backend agents are now simple data providers; all logic is handled by the client agent LLM.
+- The codebase is now clean, production-ready, and easy to extend. 

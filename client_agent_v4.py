@@ -1,14 +1,11 @@
 import requests
-import sys
 import httpx
 import json
 from dotenv import load_dotenv
 import os
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
-
-# Access the API key
 api_key = os.getenv('API_KEY')
 base_url = os.getenv('API_URL')
 model = os.getenv('MODEL')
@@ -19,9 +16,7 @@ HR_AGENT_URL = "http://localhost:8001/hr-tasks/send"
 API_KEY = "dummy-dekallm-key"
 
 async def call_llm(prompt: str, user_query: str, temperature: float = 0.2) -> str:
-    """
-    Call the LLM with a specific prompt and user query.
-    """
+    """Call the LLM with a specific prompt and user query."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -130,9 +125,7 @@ async def determine_agent_and_query_type(user_query: str) -> tuple[str, str]:
         return "employee", "general"
 
 def get_employee_info(employee_query: str) -> dict:
-    """
-    Get employee information from Employee Info Agent.
-    """
+    """Get employee information from Employee Info Agent."""
     try:
         response = requests.post(
             EMPLOYEE_AGENT_URL,
@@ -146,9 +139,7 @@ def get_employee_info(employee_query: str) -> dict:
         return {"error": f"Error communicating with Employee Info Agent: {str(e)}"}
 
 def get_hr_info(employee_id: int, query_type: str) -> dict:
-    """
-    Get HR information from HR Agent using employee ID.
-    """
+    """Get HR information from HR Agent using employee ID."""
     try:
         response = requests.post(
             HR_AGENT_URL,
@@ -162,9 +153,7 @@ def get_hr_info(employee_id: int, query_type: str) -> dict:
         return {"error": f"Error communicating with HR Agent: {str(e)}"}
 
 def get_all_employees() -> dict:
-    """
-    Get all employee information from Employee Info Agent.
-    """
+    """Get all employee information from Employee Info Agent."""
     try:
         print("🔍 Getting all employees from Employee Info Agent...")
         response = requests.post(
@@ -181,9 +170,7 @@ def get_all_employees() -> dict:
         return {"error": f"Error communicating with Employee Info Agent: {str(e)}"}
 
 def get_all_salaries() -> dict:
-    """
-    Get all salary information from HR Agent.
-    """
+    """Get all salary information from HR Agent."""
     try:
         print("💰 Getting all salaries from HR Agent...")
         payload = {"query": "all salaries", "query_type": "salary"}
@@ -197,15 +184,12 @@ def get_all_salaries() -> dict:
         response.raise_for_status()
         result = response.json()
         print(f"✅ Got {len(result.get('results', []))} salary records")
-        # print(f"📥 Response: {result}")
         return result
     except requests.exceptions.RequestException as e:
         return {"error": f"Error communicating with HR Agent: {str(e)}"}
 
 def perform_comparison(query_type: str) -> dict:
-    """
-    Perform comparison queries (highest/lowest salary, role, etc.).
-    """
+    """For salary queries, just return all salary data and let LLM handle the reasoning."""
     try:
         if query_type in ["highest_salary", "lowest_salary"]:
             # Get all employees and salaries
@@ -234,23 +218,12 @@ def perform_comparison(query_type: str) -> dict:
             if not combined_data:
                 return {"error": "No employee salary data found"}
             
-            # Sort by salary
-            if query_type == "highest_salary":
-                combined_data.sort(key=lambda x: x["salary"]["base_salary"], reverse=True)
-                result = combined_data[0]
-                return {
-                    "comparison_type": "highest_salary",
-                    "result": result,
-                    "message": f"{result['employee']['name']} has the highest salary: {result['salary']['base_salary']} {result['salary']['currency']}"
-                }
-            else:  # lowest_salary
-                combined_data.sort(key=lambda x: x["salary"]["base_salary"])
-                result = combined_data[0]
-                return {
-                    "comparison_type": "lowest_salary",
-                    "result": result,
-                    "message": f"{result['employee']['name']} has the lowest salary: {result['salary']['base_salary']} {result['salary']['currency']}"
-                }
+            # Return all combined data for LLM to process
+            return {
+                "comparison_type": "salary_data",
+                "results": combined_data,
+                "message": f"Found {len(combined_data)} employee salary records"
+            }
         
         elif query_type in ["highest_role", "lowest_role"]:
             # Get all employees
@@ -264,44 +237,12 @@ def perform_comparison(query_type: str) -> dict:
             if not employees:
                 return {"error": "No employee data found"}
             
-            # Define role hierarchy (lower number = higher role)
-            role_hierarchy = {
-                "CEO": 1, "CTO": 2, "CFO": 2, "COO": 2, "CMO": 2,
-                "VP Engineering": 3, "VP Sales": 3, "VP Marketing": 3,
-                "Director IT": 4, "Director HR": 4,
-                "Engineering Manager": 5, "Lead Data Scientist": 5, "Product Manager": 5,
-                "Lead Engineer": 6, "Data Scientist": 7, "Software Engineer": 8,
-                "UX Designer": 8, "DevOps Engineer": 8, "Marketing Specialist": 8,
-                "HR Manager": 8, "Financial Analyst": 8, "Technical Writer": 8,
-                "Sales Representative": 8, "Customer Support": 8, "Business Analyst": 8,
-                "Legal Counsel": 8, "Research Scientist": 8, "Project Coordinator": 8,
-                "Network Engineer": 8, "Content Creator": 8, "Operations Manager": 8,
-                "Data Engineer": 8, "Accountant": 8, "QA Engineer": 8,
-                "Cloud Architect": 8, "Scrum Master": 8, "Cybersecurity Analyst": 8,
-                "Product Designer": 8, "Machine Learning Engineer": 8
+            # Return all employee data for LLM to process
+            return {
+                "comparison_type": "role_data",
+                "results": employees,
+                "message": f"Found {len(employees)} employee records"
             }
-            
-            # Add hierarchy level to each employee
-            for emp in employees:
-                emp["role_level"] = role_hierarchy.get(emp["job_role"], 9)  # Default to lowest level
-            
-            # Sort by role level
-            if query_type == "highest_role":
-                employees.sort(key=lambda x: x["role_level"])
-                result = employees[0]
-                return {
-                    "comparison_type": "highest_role",
-                    "result": result,
-                    "message": f"{result['name']} has the highest role: {result['job_role']} (Level {result['role_level']})"
-                }
-            else:  # lowest_role
-                employees.sort(key=lambda x: x["role_level"], reverse=True)
-                result = employees[0]
-                return {
-                    "comparison_type": "lowest_role",
-                    "result": result,
-                    "message": f"{result['name']} has the lowest role: {result['job_role']} (Level {result['role_level']})"
-                }
         
         else:
             return {"error": f"Unknown comparison type: {query_type}"}
@@ -310,18 +251,63 @@ def perform_comparison(query_type: str) -> dict:
         return {"error": f"Error performing comparison: {str(e)}"}
 
 async def generate_natural_response(user_query: str, result: dict) -> str:
-    """
-    Use LLM to generate a natural language response based on the query and results.
-    """
+    """Use LLM to generate a natural language response based on the query and results."""
     if "error" in result:
         return f"I'm sorry, but I encountered an error: {result['error']}"
     
-    # Prepare context for LLM
-    context = {
-        "user_query": user_query,
-        "result": result
-    }
+
     
+    # If this is a salary comparison, pass all salary data to the LLM
+    if (
+        isinstance(result, dict) and (
+            result.get("comparison_type") in ["salary_data", "role_data"] or
+            (isinstance(result.get("result"), dict) and "salary" in result.get("result", {})) or
+            (isinstance(result.get("result"), list) and all("salary" in r for r in result.get("result", [])))
+        )
+    ) or (
+        isinstance(result, list) and all("base_salary" in r for r in result)
+    ):
+        # Extract the data for LLM processing
+        if isinstance(result, dict) and result.get("comparison_type") == "salary_data":
+            salary_data = result.get("results", [])
+            prompt = (
+                "You are a helpful HR assistant. You are given a list of all employee salaries as JSON. "
+                "Answer the user's question using only this data. "
+                "If the user asks for the second highest salary, find it from the data. "
+                "If the user asks for the lowest salary, find it from the data. "
+                "If the user asks for the top 3, return the top 3, etc.\n\n"
+                "User Query: {user_query}\n"
+                "Salary Data: {salary_data}\n\n"
+                "Provide a clear, natural answer:"
+            ).format(user_query=user_query, salary_data=json.dumps(salary_data, indent=2))
+        elif isinstance(result, dict) and result.get("comparison_type") == "role_data":
+            role_data = result.get("results", [])
+            prompt = (
+                "You are a helpful HR assistant. You are given a list of all employees as JSON. "
+                "Answer the user's question using only this data. "
+                "If the user asks for the highest role, find it from the data. "
+                "If the user asks for the lowest role, find it from the data. "
+                "If the user asks for the top 3 roles, return the top 3, etc.\n\n"
+                "User Query: {user_query}\n"
+                "Employee Data: {role_data}\n\n"
+                "Provide a clear, natural answer:"
+            ).format(user_query=user_query, role_data=json.dumps(role_data, indent=2))
+        else:
+            # Fallback for other salary data structures
+            salary_data = result if isinstance(result, list) else result.get("result") or result.get("results") or result
+            prompt = (
+                "You are a helpful HR assistant. You are given a list of all employee salaries as JSON. "
+                "Answer the user's question using only this data. "
+                "If the user asks for the second highest salary, find it from the data. "
+                "If the user asks for the lowest salary, find it from the data. "
+                "If the user asks for the top 3, return the top 3, etc.\n\n"
+                "User Query: {user_query}\n"
+                "Salary Data: {salary_data}\n\n"
+                "Provide a clear, natural answer:"
+            ).format(user_query=user_query, salary_data=json.dumps(salary_data, indent=2))
+        return await call_llm(prompt, "", temperature=0.3)
+    
+    # Default: previous behavior
     prompt = (
         "You are a helpful HR assistant that provides natural, conversational responses about employee information. "
         "Based on the user's query and the data results, provide a clear and helpful response.\n\n"
@@ -335,13 +321,10 @@ async def generate_natural_response(user_query: str, result: dict) -> str:
         "Data Results: {result}\n\n"
         "Provide a natural response:"
     ).format(user_query=user_query, result=json.dumps(result, indent=2))
-    
     return await call_llm(prompt, "", temperature=0.3)
 
 async def route_query_to_agent(user_query: str) -> dict:
-    """
-    Route the query to the appropriate agent(s) and return the response.
-    """
+    """Route the query to the appropriate agent(s) and return the response."""
     # Step 1: Clarify the user query
     print("🔍 Clarifying user query...")
     clarified_query = await clarify_user_query(user_query)
